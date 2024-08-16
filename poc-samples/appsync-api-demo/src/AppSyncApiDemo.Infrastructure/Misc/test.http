@@ -3,7 +3,7 @@ Host: xdt06dy1bd.execute-api.us-east-1.amazonaws.com
 User-Agent: curl/8.2.1
 Accept: */*
 Content-Type: application/graphql
-x-api-key: da2-i3mharqs45bsxbhjsgfqkzy46y
+x-api-key: masked
 Content-Length: 91
 
 #{
