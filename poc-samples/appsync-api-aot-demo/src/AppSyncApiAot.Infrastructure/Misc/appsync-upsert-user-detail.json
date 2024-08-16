@@ -1,0 +1,57 @@
+{
+  "version": "2017-02-28",
+  "operation": "Invoke",
+  "payload": {
+    "identity": null,
+    "result": null,
+    "request": {
+      "headers": {
+        "x-amzn-vpce-config": "1",
+        "x-forwarded-for": "24.73.54.9, 70.132.5.165, 10.0.7.140",
+        "cloudfront-viewer-country": "US",
+        "cloudfront-is-tablet-viewer": "false",
+        "x-amzn-requestid": "4770765f-b046-4ee9-8163-3532fc2c5e76",
+        "via": "1.1 ca1d5a4b52d08cd5e7ea6f85005bf084.cloudfront.net (CloudFront)",
+        "cloudfront-forwarded-proto": "https",
+        "x-amzn-vpce-policy-url": "",
+        "content-length": "113",
+        "x-forwarded-proto": "https",
+        "host": "r2ghwaiewvgo3chlvqcy4no2ei.appsync-api.us-east-1.amazonaws.com",
+        "user-agent": "curl/8.2.1",
+        "cloudfront-is-mobile-viewer": "false",
+        "accept": "*/*",
+        "cloudfront-viewer-asn": "33363",
+        "cloudfront-is-smarttv-viewer": "false",
+        "x-amzn-appsync-is-vpce-request": "true",
+        "accept-encoding": "br, deflate, gzip, x-gzip",
+        "x-amzn-remote-ip": "10.0.7.140",
+        "x-api-key": "da2-mrxkfa4gizbhrlj2pr55glf56a",
+        "cookie": "AWSALBTG=gVIdT7k%2FqBARvP970D8p2XgmNJBGIrxG6fOh6xHs+qtmp+4+mM+cv0J4XgU5F8yg9FinOWCMReaTdipc0NKMxQAcLvSkbXM9JpCvN5gnSUK4LKHs%2FnUB%2Fwp4iI+DuYyyYzLDgbdnWCBz4QHndj%2FDTs7XxhGbdo+2hln5ikQTHvFR; AWSALBTGCORS=gVIdT7k%2FqBARvP970D8p2XgmNJBGIrxG6fOh6xHs+qtmp+4+mM+cv0J4XgU5F8yg9FinOWCMReaTdipc0NKMxQAcLvSkbXM9JpCvN5gnSUK4LKHs%2FnUB%2Fwp4iI+DuYyyYzLDgbdnWCBz4QHndj%2FDTs7XxhGbdo+2hln5ikQTHvFR",
+        "content-type": "application/graphql",
+        "x-amz-cf-id": "swpEialCxdTeIs1t2d0f1zzWDiriFvMWrhR6wL4FnesCcoNH9PJlBA==",
+        "x-amzn-trace-id": "Self=1-66be2817-032dcf5071e2b3b055bc6ca7;Root=1-66be2817-4371374c16535f0a670695a8",
+        "x-amzn-vpce-id": "vpce-0041c831a2ed651fb",
+        "cloudfront-is-desktop-viewer": "true",
+        "x-amzn-vpc-id": "vpc-0b50189315c82e826",
+        "x-amzn-apigateway-api-id": "e6kd30d2mc",
+        "x-forwarded-port": "443"
+      },
+      "domainName": null
+    },
+    "info": {
+      "fieldName": "upsertUserDetail",
+      "parentTypeName": "Mutation",
+      "variables": {}
+    },
+    "error": null,
+    "prev": null,
+    "stash": {},
+    "outErrors": [],
+    "arguments": {
+      "userId": "2",
+      "firstName": "Leslie",
+      "lastName": "Raj"
+    },
+    "source": null
+  }
+}

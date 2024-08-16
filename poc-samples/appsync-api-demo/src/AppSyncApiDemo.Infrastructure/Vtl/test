@@ -1,0 +1,11 @@
+query MyQuery {
+  getUserPipeline(userId: "1", applicationKey: {applicationId: App1, clientId: "C1", preferenceType: User}) {
+    preference
+    userId
+    applicationKey {
+      applicationId
+      clientId
+      preferenceType
+    }
+  }
+}

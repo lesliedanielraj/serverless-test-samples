@@ -1,0 +1,23 @@
+### Mutation
+POST /prod/graphql HTTP/1.1
+Host: {{endpoint}}
+User-Agent: curl/8.2.1
+Accept: */*
+Content-Type: application/graphql
+x-api-key: {{api-key}}
+
+{
+  "query": "mutation MyMutation { upsertUserDetail(firstName: \"Leslie\", lastName: \"Raj\", userId: \"2\")}"
+}
+
+### Query
+POST /prod/graphql HTTP/1.1
+Host: {{endpoint}}
+User-Agent: curl/8.2.1
+Accept: */*
+Content-Type: application/graphql
+x-api-key: {{api-key}}
+
+{
+  "query": "query MyQuery { getUserDetail(userId: \"2\") { firstName lastName userId }}"
+}

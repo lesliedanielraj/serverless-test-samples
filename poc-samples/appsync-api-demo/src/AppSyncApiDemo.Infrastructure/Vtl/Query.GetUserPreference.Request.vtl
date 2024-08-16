@@ -1,0 +1,23 @@
+## Request Mapping Template for the Second Lambda Function
+$util.qr($context.stash.put("headers", $context.request.headers))
+$util.qr($context.stash.put("info", $context.info))
+
+#if(!$context.prev.result)
+    $utils.error("unauthorized")
+#else
+    #set($arguments = $context.arguments)
+    #set($arguments.prevResult = $context.prev.result)
+    #set($arguments.userId = $context.prev.result.userId)
+    
+    #set($info.fieldName = $context.info.fieldName)
+    #set($info.parentTypeName = $context.info.parentTypeName)
+
+    {
+        "version": "2017-02-28",
+        "operation": "Invoke",
+        "payload": {
+            "arguments": $utils.toJson($arguments)
+        }
+    }
+#end
+

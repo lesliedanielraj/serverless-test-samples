@@ -1,0 +1,6 @@
+## Response Mapping Template for the Pipeline Resolver
+#if($context.error)
+    $util.error($context.error.message, $context.error.type, $context.prev.result)
+#end
+
+$util.toJson($context.prev.result)

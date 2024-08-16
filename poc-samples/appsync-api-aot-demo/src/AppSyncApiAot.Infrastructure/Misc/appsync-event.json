@@ -1,0 +1,54 @@
+{
+  "identity": null,
+  "result": null,
+  "request": {
+    "headers": {
+      "x-amzn-vpce-config": "1",
+      "x-forwarded-for": "24.73.54.9, 70.132.5.168, 10.0.1.251",
+      "cloudfront-viewer-country": "US",
+      "cloudfront-is-tablet-viewer": "false",
+      "x-amzn-requestid": "03fa5a4b-4724-4f4a-a279-462501fbef9c",
+      "via": "1.1 5c9551b972dbf6cf1748ce7f55922446.cloudfront.net (CloudFront)",
+      "cloudfront-forwarded-proto": "https",
+      "x-amzn-vpce-policy-url": "",
+      "content-length": "92",
+      "x-forwarded-proto": "https",
+      "host": "r2ghwaiewvgo3chlvqcy4no2ei.appsync-api.us-east-1.amazonaws.com",
+      "user-agent": "curl/8.2.1",
+      "cloudfront-is-mobile-viewer": "false",
+      "accept": "*/*",
+      "cloudfront-viewer-asn": "33363",
+      "cloudfront-is-smarttv-viewer": "false",
+      "x-amzn-appsync-is-vpce-request": "true",
+      "accept-encoding": "br, deflate, gzip, x-gzip",
+      "x-amzn-remote-ip": "10.0.1.251",
+      "content-type": "application/graphql",
+      "x-api-key": "da2-mrxkfa4gizbhrlj2pr55glf56a",
+      "x-amz-cf-id": "GHES-iXQOjB1MRNxajtb6lGYQqA8oXLXOIPxgNUyD6U-HMNnVdu-kg==",
+      "x-amzn-trace-id": "Self=1-66be195a-312bcb90313e2a401510f4cf;Root=1-66be195a-65359ba12ecbb3d639b8a561",
+      "x-amzn-vpce-id": "vpce-0041c831a2ed651fb",
+      "cloudfront-is-desktop-viewer": "true",
+      "x-amzn-vpc-id": "vpc-0b50189315c82e826",
+      "x-amzn-apigateway-api-id": "e6kd30d2mc",
+      "x-forwarded-port": "443"
+    },
+    "domainName": null
+  },
+  "info": {
+    "fieldName": "getUserDetail",
+    "parentTypeName": "Query",
+    "variables": {
+      "x-amzn-vpc-id": "vpc-0b50189315c82e826",
+      "x-amzn-apigateway-api-id": "e6kd30d2mc",
+      "x-forwarded-port": "443"
+    }
+  },
+  "error": null,
+  "prev": null,
+  "stash": {},
+  "outErrors": [],
+  "arguments": {
+    "userId": "2"
+  },
+  "source": null
+}

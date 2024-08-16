@@ -1,0 +1,69 @@
+enum PreferenceType {
+    User,
+    Filter,
+    Enterprise
+}
+
+enum ApplicationType {
+    App1,
+    App2,
+    App3
+}
+
+# this is an app specific implementation
+input ApplicationKey {
+    applicationId: ApplicationType!
+    clientId: String
+    preferenceType: PreferenceType!
+}
+
+type ApplicationValue {
+    applicationId: ApplicationType
+    clientId: String
+    preferenceType: PreferenceType
+}
+
+enum UpsertResult {
+    Inserted,
+    Updated,
+}
+
+type UserPreference {
+    userId: String!
+    applicationKey: ApplicationValue!
+    preference: AWSJSON,
+    #    createdBy: String!,
+    #    createdDate: AWSDateTime,
+    #    updatedBy: String,
+    #    updatedDate: AWSDateTime
+}
+
+type UserDetail {
+    userId: String!
+    firstName: String
+    lastName: String
+}
+
+#type ModelPreferenceConnection {
+#    items: [UserPreference]
+#    nextToken: String
+#}
+
+type Query {
+    getUserDetail(userId: String!):UserDetail
+    getUserPipeline(userId: String!, applicationKey: ApplicationKey!):[UserPreference]
+    getUserPreference(userId: String!, applicationKey: ApplicationKey!):[UserPreference]
+#    listUserPreferences(limit: Int, nextToken: String): ModelPreferenceConnection
+}
+
+type Mutation {
+    upsertUserDetail(userId: String!, firstName: String!, lastName: String!):UpsertResult
+    upsertUserPreference(userId: String!, applicationKey: ApplicationKey!, preference: AWSJSON!):UpsertResult
+    deleteUserPreference(userId: String!, applicationId: ApplicationType!): Boolean
+}
+
+#type Subscription {
+#  onCreateUserPreference: Preference @aws_subscribe(mutations: ["createTodo"])
+#  onUpdateUserPreference: Preference @aws_subscribe(mutations: ["updateTodo"])
+#  onDeleteUserPreference: Preference @aws_subscribe(mutations: ["deleteTodo"])
+#}

@@ -1,0 +1,14 @@
+POST /prod/graphql HTTP/1.1
+Host: xdt06dy1bd.execute-api.us-east-1.amazonaws.com
+User-Agent: curl/8.2.1
+Accept: */*
+Content-Type: application/graphql
+x-api-key: da2-i3mharqs45bsxbhjsgfqkzy46y
+Content-Length: 91
+
+#{
+#  "query": "mutation MyMutation { upsertUserDetail(firstName: \"Leslie\", lastName: \"Raj\", userId: \"2\")}"
+#}
+{
+  "query": "query MyQuery { dummyQuery(userId: \"2\") { firstName lastName userId }}"
+}

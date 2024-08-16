@@ -1,0 +1,6 @@
+## Response Mapping Template for the Second Lambda Function
+#if($context.error)
+    $util.error($context.error.message, $context.error.type, $context.result)
+#end
+
+$util.toJson($context.result)
