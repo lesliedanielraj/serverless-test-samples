@@ -131,10 +131,12 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
                     400, {"message": "Missing required 'message' field"}
                 )
 
-
             # Invoke Bedrock agent
             try:
-                bedrock_agent = BedrockAgent(os.environ.get("BEDROCK_AGENT_ID"), os.environ.get("BEDROCK_AGENT_ALIAS_ID"))
+                bedrock_agent = BedrockAgent(
+                    os.environ.get("BEDROCK_AGENT_ID"),
+                    os.environ.get("BEDROCK_AGENT_ALIAS_ID"),
+                )
                 agent_response = bedrock_agent.invoke(
                     message, session_id, enable_trace=True
                 )
@@ -148,7 +150,8 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
 
                 # Send response through WebSocket
                 management_api = boto3.client(
-                    "apigatewaymanagementapi", endpoint_url=os.environ.get("WEBSOCKET_CALLBACK_URL")
+                    "apigatewaymanagementapi",
+                    endpoint_url=os.environ.get("WEBSOCKET_CALLBACK_URL"),
                 )
                 send_websocket_message(connection_id, response_payload, management_api)
                 logger.info("Successfully sent agent response to client")

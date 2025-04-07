@@ -6,6 +6,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
+
 @pytest.fixture
 def environment_vars(monkeypatch):
     env_vars = {
@@ -59,6 +60,7 @@ def websocket_api_event():
         },
         "headers": {"Host": "test-host"},
     }
+
 
 @pytest.fixture
 def sqs_event():

@@ -4,16 +4,23 @@ import aws_cdk as cdk
 from infrastructure.bedrock_agent_stack import BedrockAgentStack
 from infrastructure.bedrock_guardrails_stack import BedrockGuardrailsStack
 from infrastructure.websocket_api_stack import WebSocketStack
+from infrastructure.action_group_stack import ActionGroupStack
 
 app = cdk.App()
 
 # Create Bedrock stacks
 bedrock_guardrails_stack = BedrockGuardrailsStack(app, "BedrockGuardrailsStack")
+
+# Create Action Group stack
+action_group_stack = ActionGroupStack(app, "ActionGroupStack")
+
+# Create Bedrock Agent stack with function ARN from Action Group stack
 bedrock_agent_stack = BedrockAgentStack(
     app,
     "BedrockAgentStack",
     guardrails_bucket_name=bedrock_guardrails_stack.guardrails_bucket_name,
     guardrails_role_arn=bedrock_guardrails_stack.guardrails_role_arn,
+    structured_response_function_arn=action_group_stack.function_arn,
 )
 
 # Create WebSocket API stack with Bedrock agent ID

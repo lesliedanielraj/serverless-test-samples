@@ -10,14 +10,12 @@ from utilities import format_response, validate_connection_id
 
 logger = Logger(service="websocket-connect-handler")
 
+
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST)
 def handler(event: dict, context: LambdaContext):
     if not validate_connection_id(event):
         logger.error("Invalid connection ID")
-        return {
-            'statusCode': 400,
-            'body': '{"message": "Invalid connection ID"}'
-        }
+        return {"statusCode": 400, "body": '{"message": "Invalid connection ID"}'}
 
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(os.environ["CONNECTIONS_TABLE"])

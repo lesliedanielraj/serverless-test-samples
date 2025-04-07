@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import Aws, Duration, RemovalPolicy, Stack
+from aws_cdk import Aws, Duration, RemovalPolicy, Stack, CfnOutput
 from aws_cdk import aws_apigatewayv2 as apigatewayv2
 from aws_cdk import aws_apigatewayv2_integrations as apigatewayv2_integrations
 from aws_cdk import aws_dynamodb as dynamodb
@@ -74,7 +74,7 @@ class WebSocketStack(Stack):
         message_handler_role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
-                actions=["bedrock:InvokeModel", "bedrock:InvokeAgent"],
+                actions=["bedrock:InvokeModel", "bedrock:InvokeAgent", "bedrock-agent-runtime:InvokeAgent"],
                 resources=["*"],
             )
         )
@@ -239,3 +239,21 @@ class WebSocketStack(Stack):
         connections_table.grant_read_write_data(connect_handler)
         connections_table.grant_read_write_data(disconnect_handler)
         connections_table.grant_read_write_data(message_handler)
+
+        # Output the websocket URL
+        CfnOutput(
+            self,
+            "WebSocketUrl",
+            value=websocket_stage.url,
+            description="WebSocket API URL",
+            export_name="WebSocketUrl",
+        )
+
+        # Output the websocket callback URL
+        CfnOutput(
+            self,
+            "WebSocketCallbackUrl",
+            value=websocket_stage.callback_url,
+            description="WebSocket API Callback URL",
+            export_name="WebSocketCallbackUrl",
+        )

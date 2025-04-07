@@ -4,8 +4,11 @@ from moto import mock_aws
 
 from handlers.connect import handler
 
+
 @mock_aws()
-def test_connect_handler_success(environment_vars, dynamodb_table, websocket_api_event, context):
+def test_connect_handler_success(
+    environment_vars, dynamodb_table, websocket_api_event, context
+):
     """Test successful connection handling"""
     boto3.setup_default_session(region_name="us-east-1")
     response = handler(websocket_api_event, context)
@@ -19,8 +22,12 @@ def test_connect_handler_success(environment_vars, dynamodb_table, websocket_api
     items = result["Items"]
 
     assert len(items) == 1
-    assert items[0]["connection_id"]["S"] == websocket_api_event["requestContext"]["connectionId"]
+    assert (
+        items[0]["connection_id"]["S"]
+        == websocket_api_event["requestContext"]["connectionId"]
+    )
     assert "session_id" in items[0]
+
 
 @mock_aws()
 def test_connect_handler_missing_connection_id(
@@ -52,6 +59,7 @@ def test_connect_handler_invalid_event(
     assert response["statusCode"] == 400
     assert "Invalid connection ID" in response["body"]
 
+
 @mock_aws()
 def test_connect_handler_duplicate_connection(
     environment_vars, dynamodb_table, websocket_api_event, context
@@ -72,8 +80,11 @@ def test_connect_handler_duplicate_connection(
     print(result["Items"])
     assert len(result["Items"]) == 1
 
+
 @mock_aws()
-def test_connect_handler_table_not_exists(environment_vars, websocket_api_event, context):
+def test_connect_handler_table_not_exists(
+    environment_vars, websocket_api_event, context
+):
     """Test handling when DynamoDB table doesn't exist"""
     boto3.setup_default_session(region_name="us-east-1")
     # Don't create the table

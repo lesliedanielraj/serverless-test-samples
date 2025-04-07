@@ -18,10 +18,14 @@ def validate_input(event: dict) -> bool:
     required_fields = ["requestContext", "connectionId"]
     return all(field in event.get("requestContext", {}) for field in ["connectionId"])
 
+
 def validate_connection_id(event):
     try:
         # Check if requestContext and connectionId exist
-        if not event.get("requestContext") or "connectionId" not in event["requestContext"]:
+        if (
+            not event.get("requestContext")
+            or "connectionId" not in event["requestContext"]
+        ):
             return False
 
         connection_id = event["requestContext"]["connectionId"]

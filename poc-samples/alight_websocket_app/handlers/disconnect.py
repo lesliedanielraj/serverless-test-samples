@@ -10,15 +10,11 @@ from utilities import format_response, validate_input, validate_connection_id
 logger = Logger(service="websocket-disconnect-handler")
 
 
-
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST)
 def handler(event: dict, context: LambdaContext):
     if not validate_connection_id(event):
         logger.error("Invalid connection ID")
-        return {
-            'statusCode': 400,
-            'body': '{"message": "Invalid connection ID"}'
-        }
+        return {"statusCode": 400, "body": '{"message": "Invalid connection ID"}'}
     connection_id = event["requestContext"]["connectionId"]
     logger.append_keys(connection_id=connection_id)
     logger.info("Processing disconnection request")
@@ -33,9 +29,7 @@ def handler(event: dict, context: LambdaContext):
             ExpressionAttributeValues={":connectionId": connection_id},
         )
         for item in response["Items"]:
-            table.delete_item(
-                Key={"connection_id": connection_id}
-            )
+            table.delete_item(Key={"connection_id": connection_id})
         return format_response(200, {"message": "Disconnected"})
     except ClientError as e:
         logger.exception(
