@@ -1,10 +1,10 @@
-import boto3
-import pytest
 import json
 from datetime import datetime
-from botocore.exceptions import ClientError
-from unittest.mock import Mock, patch, ANY
+from unittest.mock import ANY, Mock, patch
 
+import boto3
+import pytest
+from botocore.exceptions import ClientError
 from moto import mock_aws
 
 from handlers.message import handler

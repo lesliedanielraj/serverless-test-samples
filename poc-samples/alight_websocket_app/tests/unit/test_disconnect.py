@@ -1,7 +1,9 @@
 # test_disconnect.py
 import os
+
 import boto3
 from moto import mock_aws
+
 from handlers.disconnect import handler
 
 

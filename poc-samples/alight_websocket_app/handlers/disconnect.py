@@ -5,7 +5,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
-from utilities import format_response, validate_input, validate_connection_id
+from utilities import format_response, validate_connection_id, validate_input
 
 logger = Logger(service="websocket-disconnect-handler")
 

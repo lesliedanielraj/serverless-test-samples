@@ -1,9 +1,11 @@
-from aws_cdk import Stack, Duration, Aws, CfnOutput
-from aws_cdk import aws_lambda as lambda_
-from aws_cdk import aws_iam as iam
-from constructs import Construct
 import os
+from dataclasses import dataclass
 
+from aws_cdk import Aws, CfnOutput, Duration, Stack, aws_bedrock, StackProps
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as lambda_
+from cdklabs.generative_ai_cdk_constructs import bedrock
+from constructs import Construct
 
 class ActionGroupStack(Stack):
     def __init__(
@@ -29,7 +31,7 @@ class ActionGroupStack(Stack):
         )
 
         # Create the structured response Lambda function
-        structured_response_lambda = lambda_.Function(
+        structured_response_function = lambda_.Function(
             self,
             "StructuredResponseHandler",
             runtime=lambda_.Runtime.PYTHON_3_12,
@@ -44,18 +46,19 @@ class ActionGroupStack(Stack):
         )
 
         # Grant the Lambda permission to be invoked by Bedrock service
-        structured_response_lambda.add_permission(
+        structured_response_function.add_permission(
             "AllowBedrockInvoke",
             principal=iam.ServicePrincipal("bedrock.amazonaws.com"),
             action="lambda:InvokeFunction",
         )
 
         # Export the function ARN for use in other stacks
-        self.function_arn = structured_response_lambda.function_arn
+        self.function_arn = structured_response_function.function_arn
 
-        # Output the function ARN
-        CfnOutput (
-            self,
-            "StructuredResponseFunctionArn",
-            value=structured_response_lambda.function_arn,
-        )
+        # # Output the function ARN
+        # CfnOutput(
+        #     self,
+        #     "StructuredResponseFunction",
+        #     value=self.function_arn,
+        #     export_name="StructuredResponseFunction",
+        # )

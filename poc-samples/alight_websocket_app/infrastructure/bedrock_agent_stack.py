@@ -1,7 +1,12 @@
-from aws_cdk import CfnOutput, Stack
-from aws_cdk import aws_bedrock as bedrock
+import os
+
+from aws_cdk import CfnOutput, RemovalPolicy, Stack, aws_bedrock
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda
 from aws_cdk import aws_lambda as lambda_
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_s3_deployment as s3deploy
+from cdklabs.generative_ai_cdk_constructs import bedrock
 from constructs import Construct
 
 
@@ -20,16 +25,25 @@ class BedrockAgentStack(Stack):
         self.agent_id = None
         self.agent_alias_id = None
 
-        # Create IAM role for Bedrock agent
+        dashboards_bucket = s3.Bucket.from_bucket_name(
+            self,
+            "bedrockagentstack-quicksight-dashboards",
+            bucket_name=f"bedrockagentstack-quicksight-dashboards",
+        )
+
+        # Use path.join to create a platform-independent path
+        this_dir = os.path.dirname(__file__)
+        misc_dir = os.path.join(os.path.dirname(this_dir), "Misc")
+
+        # Create IAM role for Bedrock agent with more specific principal
         agent_role = iam.Role(
             self,
             "BedrockAgentRole",
-            assumed_by=iam.CompositePrincipal(
-                iam.ServicePrincipal("bedrock.amazonaws.com")
-            )
+            assumed_by=iam.ServicePrincipal("bedrock.amazonaws.com"),
+            description="Role for Bedrock Agent to access required resources",
         )
 
-        # Add necessary permissions for the agent
+        # Add necessary permissions for the agent with more specific resource constraints
         agent_role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -38,55 +52,90 @@ class BedrockAgentStack(Stack):
                     "bedrock:InvokeModel",
                     "bedrock:InvokeModelWithResponseStream",
                 ],
-                resources=[
-                    f"*"
-                ],
+                resources=[f"arn:aws:bedrock:{self.region}:{self.account}:*"],
+                effect=iam.Effect.ALLOW,
             )
         )
 
-        # # Get reference to the Lambda function
-        # structured_response_lambda = lambda_.Function.from_function_arn(
-        #     # self,
-        #     # "StructuredResponseHandler",
-        #     function_arn=structured_response_function_arn
-        # )
-
-        # Add Lambda invoke permissions for the agent
+        # Add S3 permissions for the agent
         agent_role.add_to_policy(
             iam.PolicyStatement(
-                actions=["lambda:InvokeFunction"],
-                resources=[structured_response_function_arn],
+                actions=[
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                ],
+                resources=[
+                    dashboards_bucket.bucket_arn,
+                    f"{dashboards_bucket.bucket_arn}/*",
+                ],
+                effect=iam.Effect.ALLOW,
             )
         )
 
-        # Grant the Lambda permission to be invoked by Bedrock
-        # structured_response_lambda.grant_invoke(agent_role)
+        # Add Lambda invoke permissions for the agent
+        # agent_role.add_to_policy(
+        #     iam.PolicyStatement(
+        #         actions=["lambda:InvokeFunction"],
+        #         resources=[structured_response_function_arn],
+        #         effect=iam.Effect.ALLOW,
+        #     )
+        # )
 
-        # Create the action group for structured responses using function details
-        structured_response_action = bedrock.CfnAgent.AgentActionGroupProperty(
-            action_group_name="structured_response",
-            action_group_executor=bedrock.CfnAgent.ActionGroupExecutorProperty(
-                lambda_=structured_response_function_arn
+        with open(
+            os.path.join(misc_dir, "kb_instructions.txt"), "r", encoding="utf-8"
+        ) as file:
+            kb_instruction = (
+                file.read().strip()
+            )  # reads entire file into a single string
+            print(kb_instruction)
+
+        knowledge_base = bedrock.VectorKnowledgeBase(
+            self,
+            "KnowledgeBase",
+            embeddings_model=bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V1,
+            instruction=kb_instruction,
+        )
+
+        bedrock.S3DataSource(
+            self,
+            "DataSource",
+            bucket=dashboards_bucket,
+            knowledge_base=knowledge_base,
+            data_source_name="dashboards",
+            chunking_strategy=bedrock.ChunkingStrategy.FIXED_SIZE,
+        )
+
+        # Assuming structured_response_function_arn is a string containing the Lambda ARN
+        structured_response_function = aws_lambda.Function.from_function_arn(
+            self,
+            "StructuredResponseFunction",
+            function_arn=structured_response_function_arn,
+        )
+
+        structured_response_action = bedrock.AgentActionGroup(
+            name="structured_response",
+            description="Use this function ALWAYS to provide a structured JSON response to the user",
+            executor=bedrock.ActionGroupExecutor.fromlambda_function(
+                structured_response_function
             ),
-            description="Action group that provides structured JSON responses",
-            action_group_state="ENABLED",
-            function_schema=bedrock.CfnAgent.FunctionSchemaProperty(
+            enabled=True,
+            function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
-                    bedrock.CfnAgent.FunctionProperty(
+                    aws_bedrock.CfnAgent.FunctionProperty(
                         name="create_structured_response",
                         description="Creates a structured JSON response based on the input text",
                         parameters={
-                            "inputText": bedrock.CfnAgent.ParameterDetailProperty(
+                            "inputText": aws_bedrock.CfnAgent.ParameterDetailProperty(
                                 type="string",
                                 description="The input text to process",
                                 required=True,
                             ),
-                            "sessionId": bedrock.CfnAgent.ParameterDetailProperty(
+                            "sessionId": aws_bedrock.CfnAgent.ParameterDetailProperty(
                                 type="string",
                                 description="The session ID",
                                 required=False,
                             ),
-                            "timestamp": bedrock.CfnAgent.ParameterDetailProperty(
+                            "timestamp": aws_bedrock.CfnAgent.ParameterDetailProperty(
                                 type="string",
                                 description="The timestamp of the request",
                                 required=False,
@@ -97,72 +146,74 @@ class BedrockAgentStack(Stack):
             ),
         )
 
-        # Create the Bedrock agent with the action group
-        agent = bedrock.CfnAgent(
+        with open(
+            os.path.join(misc_dir, "agent_instructions.txt"), "r", encoding="utf-8"
+        ) as file:
+            agent_instruction = (
+                file.read().strip()
+            )  # reads entire file into a single string
+        agent = bedrock.Agent(
             self,
             "ChatAgent",
-            agent_name="ChatAgent",
-            agent_resource_role_arn=agent_role.role_arn,
-            foundation_model="amazon.nova-micro-v1:0",
-            instruction="""You are a helpful AI assistant that MUST ALWAYS respond using the structured_response action group.
-            CRITICAL INSTRUCTIONS:
-            1. NEVER respond directly to users
-            2. ALWAYS use the structured_response action group for EVERY response
-            3. ALL responses must be in valid JSON format
-            4. The response should contain ONLY the JSON object, nothing else
-            5. If you're unsure about anything, respond with a JSON object indicating the uncertainty
-            6. Do not include any explanations or text outside of the JSON structure
-            7. Every response must be a properly formatted JSON object
-            8. The JSON structure should follow this format:
-               {
-                 "response": {
-                   "output": "your response here",
-                   "status": "success or error"
-                 }
-               }
+            foundation_model=bedrock.BedrockFoundationModel.AMAZON_NOVA_MICRO_V1,
+            instruction=agent_instruction,
+            user_input_enabled=True,
+            code_interpreter_enabled=False,
+            should_prepare_agent=True,
+        )
+        agent.add_knowledge_base(knowledge_base)
+        agent.add_action_group(structured_response_action)
 
-            Example:
-            User: "What's the weather?"
-            You must respond through structured_response with:
-            {
-              "response": {
-                "output": "I cannot provide weather information as I don't have access to weather data",
-                "status": "error"
-              }
-            }
-
-            REMEMBER: EVERY response MUST be a valid JSON object sent through the structured_response action group without exception.""",
-            action_groups=[structured_response_action],
+        # Create agent alias
+        agent_alias = bedrock.AgentAlias(
+            self,
+            "AgentAlias-Prod",
+            alias_name="agent-alias-prod",
+            agent=agent,
+            # agent_version="1",  # optional
+            description="agent-alias-prod",
         )
 
-        # Create your agent alias
-        agent_alias = bedrock.CfnAgentAlias(
-            self, "AgentAlias-Prod", agent_id=agent.attr_agent_id, agent_alias_name="prod"
-        )
+        self.agent_id = agent.agent_id
+        self.agent_alias_id = agent_alias.alias_id
 
-        # Output the agent ID for use in other stacks
-        # Store the agent ID for reference by other stacks
-        self.agent_id = agent.attr_agent_id
-        self.agent_alias_id = agent_alias.attr_agent_alias_id
+        # # Outputs
+        # CfnOutput(
+        #     self,
+        #     "BedrockAgentId",
+        #     value=self.agent_id,
+        #     export_name="BedrockAgentId",
+        #     description="Bedrock Agent ID",
+        # )
+        #
+        # CfnOutput(
+        #     self,
+        #     "BedrockAgentAliasId",
+        #     value=self.agent_alias_id,
+        #     description="Bedrock Agent Alias ID",
+        #     export_name="BedrockAgentAliasId",
+        # )
 
-        CfnOutput(
-            self, "BedrockAgentId", value=self.agent_id, export_name="BedrockAgentId"
-        )
+        # CfnOutput(
+        #     self,
+        #     "StructuredResponseFunctionArn",
+        #     value=structured_response_function_arn,
+        #     description="Structured Response Function Arn",
+        #     export_name="StructuredResponseFunctionArn",
+        # )
 
-        # Output the alias ID
         CfnOutput(
             self,
-            "BedrockAgentAliasId",
-            value=agent_alias.attr_agent_alias_id,
-            description="Bedrock Agent Alias ID",
-            export_name="BedrockAgentAliasId",
+            "DashboardsBucketName",
+            value=dashboards_bucket.bucket_name,
+            description="QuickSight Dashboards S3 Bucket Name",
+            export_name="DashboardsBucketName",
         )
 
-        # Output the alias ID
         CfnOutput(
             self,
-            "StructuredResponseFunctionArn",
-            value=structured_response_function_arn,
-            description="Structured Response Function Arn",
-            export_name="StructuredResponseFunctionArn",
+            "KnowledgeBaseId",
+            value=knowledge_base.knowledge_base_id,
+            description="Knowledge Base ID",
+            export_name="KnowledgeBaseId",
         )

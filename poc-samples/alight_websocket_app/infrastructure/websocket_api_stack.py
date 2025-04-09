@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import Aws, Duration, RemovalPolicy, Stack, CfnOutput
+from aws_cdk import Aws, CfnOutput, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_apigatewayv2 as apigatewayv2
 from aws_cdk import aws_apigatewayv2_integrations as apigatewayv2_integrations
 from aws_cdk import aws_dynamodb as dynamodb
@@ -22,6 +22,13 @@ class WebSocketStack(Stack):
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        # Add removal policy to clean up resources
+        self.removal_policy = RemovalPolicy.DESTROY
+
+        # Add dependency attributes
+        self.agent_id = bedrock_agent_id
+        self.agent_alias_id = bedrock_agent_alias_id
 
         # Create DynamoDB table for connection tracking
         connections_table = dynamodb.Table(
@@ -74,7 +81,11 @@ class WebSocketStack(Stack):
         message_handler_role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
-                actions=["bedrock:InvokeModel", "bedrock:InvokeAgent", "bedrock-agent-runtime:InvokeAgent"],
+                actions=[
+                    "bedrock:InvokeModel",
+                    "bedrock:InvokeAgent",
+                    "bedrock-agent-runtime:InvokeAgent",
+                ],
                 resources=["*"],
             )
         )

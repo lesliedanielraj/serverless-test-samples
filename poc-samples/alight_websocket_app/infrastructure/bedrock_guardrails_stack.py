@@ -40,19 +40,3 @@ class BedrockGuardrailsStack(Stack):
         # Store the guardrails role ARN
         self.guardrails_role_arn = guardrails_role.role_arn
         self.guardrails_bucket_name = guardrails_bucket.bucket_name
-
-        # Output the bucket name and role ARN for future use
-        CfnOutput(
-            self,
-            "GuardrailsConfigBucketName",
-            value=guardrails_bucket.bucket_name,
-            export_name="GuardrailsConfigBucketName",
-        )
-
-        # Output the role ARN
-        CfnOutput(
-            self,
-            "GuardrailsRoleArn",
-            value=guardrails_role.role_arn,
-            export_name="GuardrailsRoleArn",
-        )

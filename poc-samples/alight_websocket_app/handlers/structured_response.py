@@ -1,6 +1,7 @@
 import datetime
 import json
-from typing import Dict, Any
+from typing import Any, Dict
+
 from aws_lambda_powertools import Logger
 
 logger = Logger(service="structured-response-handler")
@@ -120,28 +121,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         input_text = get_parameter_value(parameters, "inputText")
         response = create_structured_response(input_text)
 
-        response_body = {
-            'TEXT': {
-                'body': json.dumps(response)
-            }
-        }
+        response_body = {"TEXT": {"body": json.dumps(response)}}
 
         function_response = {
-            'actionGroup': event['actionGroup'],
-            'function': event['function'],
-            'functionResponse': {
-                'responseBody': response_body
-            }
+            "actionGroup": event["actionGroup"],
+            "function": event["function"],
+            "functionResponse": {"responseBody": response_body},
         }
 
-        session_attributes = event['sessionAttributes']
-        prompt_session_attributes = event['promptSessionAttributes']
+        session_attributes = event["sessionAttributes"]
+        prompt_session_attributes = event["promptSessionAttributes"]
 
         action_response = {
-            'messageVersion': '1.0',
-            'response': function_response,
-            'sessionAttributes': session_attributes,
-            'promptSessionAttributes': prompt_session_attributes
+            "messageVersion": "1.0",
+            "response": function_response,
+            "sessionAttributes": session_attributes,
+            "promptSessionAttributes": prompt_session_attributes,
         }
 
         logger.info("Printing Action Response")
