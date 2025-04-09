@@ -1,8 +1,6 @@
-
 # Welcome to your CDK Python project!
 
-You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`cdk_workshop_stack`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+This project implements a WebSocket API that integrates with Amazon Bedrock to provide AI agent interactions. The infrastructure includes WebSocket connection management, message processing via SQS queues, and integration with Bedrock agents.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
@@ -43,8 +41,12 @@ At this point you can now synthesize the CloudFormation template for this code.
 $ cdk synth
 ```
 
-You can now begin exploring the source code, contained in the hello directory.
-There is also a very trivial test included that can be run like this:
+You can now begin exploring the source code, contained in the following directories:
+- `handlers/`: Contains Lambda function handlers for WebSocket operations
+- `infrastructure/`: Contains CDK stack definitions
+- `tests/`: Contains unit and load tests
+
+The project includes tests that can be run like this:
 
 ```
 $ pytest

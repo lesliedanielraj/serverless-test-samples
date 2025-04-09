@@ -231,8 +231,8 @@ class WebSocketStack(Stack):
             timeout=Duration.seconds(30),
             environment={
                 "CONNECTIONS_TABLE": connections_table.table_name,
-                "BEDROCK_AGENT_ID": bedrock_agent_id,
-                "BEDROCK_AGENT_ALIAS_ID": bedrock_agent_alias_id,
+                "BEDROCK_AGENT_ID": self.agent_id,
+                "BEDROCK_AGENT_ALIAS_ID": self.agent_alias_id,
                 "WEBSOCKET_CALLBACK_URL": websocket_stage.callback_url,
             },
             layers=[powertools_layer],

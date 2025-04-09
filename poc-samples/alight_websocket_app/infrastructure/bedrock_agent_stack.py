@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import CfnOutput, RemovalPolicy, Stack, aws_bedrock
+from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack, aws_bedrock
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda
 from aws_cdk import aws_lambda as lambda_
@@ -17,13 +17,80 @@ class BedrockAgentStack(Stack):
         construct_id: str,
         guardrails_bucket_name: str,
         guardrails_role_arn: str,
-        structured_response_function_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.agent_id = None
-        self.agent_alias_id = None
+        # Use path.join to create a platform-independent path for lambda handlers
+        this_dir = os.path.dirname(__file__)
+        lambda_dir = os.path.join(os.path.dirname(this_dir), "handlers")
+
+        # Verify the path exists
+        if not os.path.exists(lambda_dir):
+            raise ValueError(f"Lambda directory not found: {lambda_dir}")
+
+        powertools_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self,
+            id=f"{construct_id}-lambda-powertools",
+            layer_version_arn=f"arn:aws:lambda:{self.region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python312-x86_64:10",
+        )
+
+        # Create the structured response Lambda function
+        structured_response_function = lambda_.Function(
+            self,
+            "StructuredResponseHandler",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="structured_response.handler",
+            code=lambda_.Code.from_asset(lambda_dir),
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "structured-response-handler",
+                "LOG_LEVEL": "INFO",
+            },
+            layers=[powertools_layer],
+            timeout=Duration.seconds(30),
+        )
+
+        # Grant the Lambda permission to be invoked by Bedrock service
+        structured_response_function.add_permission(
+            "AllowBedrockInvoke",
+            principal=iam.ServicePrincipal("bedrock.amazonaws.com"),
+            action="lambda:InvokeFunction",
+        )
+
+        # Create the structured response action group
+        structured_response_action = bedrock.AgentActionGroup(
+            name="structured_response",
+            description="Use this function ALWAYS to provide a structured JSON response to the user",
+            executor=bedrock.ActionGroupExecutor.fromlambda_function(
+                structured_response_function
+            ),
+            enabled=True,
+            function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
+                functions=[
+                    aws_bedrock.CfnAgent.FunctionProperty(
+                        name="create_structured_response",
+                        description="Creates a structured JSON response based on the input text",
+                        parameters={
+                            "inputText": aws_bedrock.CfnAgent.ParameterDetailProperty(
+                                type="string",
+                                description="The input text to process",
+                                required=True,
+                            ),
+                            "sessionId": aws_bedrock.CfnAgent.ParameterDetailProperty(
+                                type="string",
+                                description="The session ID",
+                                required=False,
+                            ),
+                            "timestamp": aws_bedrock.CfnAgent.ParameterDetailProperty(
+                                type="string",
+                                description="The timestamp of the request",
+                                required=False,
+                            ),
+                        },
+                    )
+                ]
+            ),
+        )
 
         dashboards_bucket = s3.Bucket.from_bucket_name(
             self,
@@ -87,7 +154,6 @@ class BedrockAgentStack(Stack):
             kb_instruction = (
                 file.read().strip()
             )  # reads entire file into a single string
-            print(kb_instruction)
 
         knowledge_base = bedrock.VectorKnowledgeBase(
             self,
@@ -106,45 +172,13 @@ class BedrockAgentStack(Stack):
         )
 
         # Assuming structured_response_function_arn is a string containing the Lambda ARN
-        structured_response_function = aws_lambda.Function.from_function_arn(
-            self,
-            "StructuredResponseFunction",
-            function_arn=structured_response_function_arn,
-        )
+        # structured_response_function = aws_lambda.Function.from_function_arn(
+        #     self,
+        #     "StructuredResponseFunction",
+        #     function_arn=structured_response_function_arn,
+        # )
 
-        structured_response_action = bedrock.AgentActionGroup(
-            name="structured_response",
-            description="Use this function ALWAYS to provide a structured JSON response to the user",
-            executor=bedrock.ActionGroupExecutor.fromlambda_function(
-                structured_response_function
-            ),
-            enabled=True,
-            function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
-                functions=[
-                    aws_bedrock.CfnAgent.FunctionProperty(
-                        name="create_structured_response",
-                        description="Creates a structured JSON response based on the input text",
-                        parameters={
-                            "inputText": aws_bedrock.CfnAgent.ParameterDetailProperty(
-                                type="string",
-                                description="The input text to process",
-                                required=True,
-                            ),
-                            "sessionId": aws_bedrock.CfnAgent.ParameterDetailProperty(
-                                type="string",
-                                description="The session ID",
-                                required=False,
-                            ),
-                            "timestamp": aws_bedrock.CfnAgent.ParameterDetailProperty(
-                                type="string",
-                                description="The timestamp of the request",
-                                required=False,
-                            ),
-                        },
-                    )
-                ]
-            ),
-        )
+
 
         with open(
             os.path.join(misc_dir, "agent_instructions.txt"), "r", encoding="utf-8"
@@ -217,3 +251,8 @@ class BedrockAgentStack(Stack):
             description="Knowledge Base ID",
             export_name="KnowledgeBaseId",
         )
+
+
+
+
+
