@@ -7,16 +7,12 @@ import pytest
 from botocore.exceptions import ClientError
 from moto import mock_aws
 
-from handlers.message import handler
+from handlers.websocket_message import handler
 
 
 @pytest.fixture
 def valid_sqs_record():
-    return {
-        "body": json.dumps(
-            {"message": "test message", "connectionId": "test-connection-id"}
-        )
-    }
+    return {"body": json.dumps({"message": "test message", "connectionId": "test-connection-id"})}
 
 
 @pytest.fixture
@@ -42,9 +38,7 @@ def test_successful_message_processing(
             "session_id": {"S": "test-session"},
         },
     )
-    sqs_event["Records"][0]["messageAttributes"]["connectionId"][
-        "stringValue"
-    ] = connection_id
+    sqs_event["Records"][0]["messageAttributes"]["connectionId"]["stringValue"] = connection_id
 
     # Call the handler
     response = handler(sqs_event, context)
@@ -55,9 +49,20 @@ def test_successful_message_processing(
 
     # Verify BedrockAgent was called correctly
     bedrock_runtime_client.assert_called_once()
-    bedrock_runtime_client.return_value.invoke.assert_called_once_with(
-        "test message", ANY, enable_trace=True  # session_id
-    )
+
+    # Get the actual call arguments
+    call_args = bedrock_runtime_client.return_value.invoke.call_args[1]
+
+    # Verify basic parameters
+    assert call_args["message"] == "test message"
+    assert call_args["enable_trace"] is True
+
+    # Verify session state contains token, name and roles
+    session_state = call_args["session_state"]
+    assert "token" in session_state
+    assert "name" in session_state
+    assert "roles" in session_state
+    assert isinstance(session_state["roles"], list)  # Verify roles is a list
 
 
 def test_invalid_message_format():

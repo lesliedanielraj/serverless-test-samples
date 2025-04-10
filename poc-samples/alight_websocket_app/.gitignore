@@ -1,25 +1,34 @@
 *.swp
 package-lock.json
+__pycache__
 .pytest_cache
+.venv
 *.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Environments
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
 .env
 .venv
 env/
 venv/
 ENV/
-env.bak/
-venv.bak/
 
-# CDK Context & Staging files
-.cdk.staging/
-cdk.out/
-
-# jetbrains files
+# IDE
 .idea/
+.vscode/
+
+# Poetry
+poetry.lock  # Comment this line if you want to track the lock file

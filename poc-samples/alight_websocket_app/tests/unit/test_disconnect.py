@@ -4,13 +4,11 @@ import os
 import boto3
 from moto import mock_aws
 
-from handlers.disconnect import handler
+from handlers.websocket_disconnect import handler
 
 
 @mock_aws
-def test_disconnect_success(
-    environment_vars, dynamodb_table, websocket_api_event, context
-):
+def test_disconnect_success(environment_vars, dynamodb_table, websocket_api_event, context):
     # Setup
     boto3.setup_default_session(region_name="us-east-1")
     dynamodb = boto3.client("dynamodb", region_name="us-east-1")
@@ -39,9 +37,7 @@ def test_disconnect_success(
 
 
 @mock_aws
-def test_disconnect_no_connection(
-    environment_vars, dynamodb_table, websocket_api_event, context
-):
+def test_disconnect_no_connection(environment_vars, dynamodb_table, websocket_api_event, context):
     boto3.setup_default_session(region_name="us-east-1")
     # Execute
     response = handler(websocket_api_event, context)

@@ -6,7 +6,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
-from utilities import format_response, validate_connection_id
+from shared.utilities import format_response, validate_connection_id
 
 logger = Logger(service="websocket-connect-handler")
 
@@ -29,9 +29,7 @@ def handler(event: dict, context: LambdaContext):
         table.put_item(Item={"connection_id": connection_id, "session_id": session_id})
         return format_response(200, {"message": "Connected", "session_id": session_id})
     except ClientError as e:
-        logger.exception(
-            "AWS service error", extra={"error_code": e.response["Error"]["Code"]}
-        )
+        logger.exception("AWS service error", extra={"error_code": e.response["Error"]["Code"]})
         return format_response(500, {"message": "Internal server error"})
     except Exception as e:
         logger.exception("Failed to connect")

@@ -37,9 +37,7 @@ class WebSocketStack(Stack):
             partition_key=dynamodb.Attribute(
                 name="connection_id", type=dynamodb.AttributeType.STRING
             ),
-            sort_key=dynamodb.Attribute(
-                name="session_id", type=dynamodb.AttributeType.STRING
-            ),
+            sort_key=dynamodb.Attribute(name="session_id", type=dynamodb.AttributeType.STRING),
             removal_policy=RemovalPolicy.DESTROY,
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
         )
@@ -58,13 +56,33 @@ class WebSocketStack(Stack):
             layer_version_arn=f"arn:aws:lambda:{Aws.REGION}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python312-x86_64:10",
         )
 
-        # Create Lambda handlers
+        # Create Lambda
+        bundling = {
+            "image": lambda_.Runtime.PYTHON_3_12.bundling_image,
+            "command": [
+                "bash",
+                "-c",
+                """
+                 set -e
+                 pip install -r requirements.txt --target /asset-output/
+                 cp -au . /asset-output/
+                 
+                 # Clean up unnecessary files
+                 cd /asset-output
+                 rm -rf *.dist-info *.egg-info
+                 find . -type d -name "__pycache__" -exec rm -rf {} +
+                 find . -type f -name "*.pyc" -delete
+                 find . -type f -name "requirements.txt" -delete
+                 find . -type f -name "pyproject.toml" -delete
+                 """,
+            ],
+        }
         connect_handler = lambda_.Function(
             self,
             "ConnectHandler",
             runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="connect.handler",
-            code=lambda_.Code.from_asset(lambda_dir),
+            handler="websocket_connect.handler",
+            code=lambda_.Code.from_asset(lambda_dir, bundling=bundling),
             environment={"CONNECTIONS_TABLE": connections_table.table_name},
             layers=[powertools_layer],
         )
@@ -130,17 +148,15 @@ class WebSocketStack(Stack):
             # visibility_timeout=Duration.seconds(30),
             retention_period=Duration.days(1),
             fifo=True,
-            dead_letter_queue=sqs.DeadLetterQueue(
-                max_receive_count=3, queue=message_queue_dlq
-            ),
+            dead_letter_queue=sqs.DeadLetterQueue(max_receive_count=3, queue=message_queue_dlq),
         )
 
         disconnect_handler = lambda_.Function(
             self,
             "DisconnectHandler",
-            handler="disconnect.handler",
+            handler="websocket_disconnect.handler",
             runtime=lambda_.Runtime.PYTHON_3_12,
-            code=lambda_.Code.from_asset(lambda_dir),
+            code=lambda_.Code.from_asset(lambda_dir, bundling=bundling),
             environment={"CONNECTIONS_TABLE": connections_table.table_name},
             layers=[powertools_layer],
         )
@@ -225,8 +241,8 @@ class WebSocketStack(Stack):
             self,
             "MessageHandler",
             runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="message.handler",
-            code=lambda_.Code.from_asset(lambda_dir),
+            handler="websocket_message.handler",
+            code=lambda_.Code.from_asset(lambda_dir, bundling=bundling),
             role=message_handler_role,
             timeout=Duration.seconds(30),
             environment={

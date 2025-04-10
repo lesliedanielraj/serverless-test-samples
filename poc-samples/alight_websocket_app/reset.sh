@@ -22,14 +22,23 @@ rm -f cdk.context.json
 echo "Clearing asset files..."
 rm -rf asset.*
 
-# Optional: Clear virtual environment
-echo "Clearing virtual environment..."
+# Optional: Clear Poetry environment
+echo "Clearing Poetry environment..."
 rm -rf .venv/
 
-# Optional: Recreate virtual environment
-echo "Recreating virtual environment..."
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Optional: Recreate Poetry environment
+echo "Recreating Poetry environment..."
+poetry env use python3.12
+poetry install
+
+# Install handlers dependencies
+echo "Installing handlers dependencies..."
+cd handlers
+poetry build
+cd ..
+
+echo "Redeploying all stacks with CDK..."
+cdk synth
+cdk deploy --all --require-approval never
 
 echo "Reset complete!"

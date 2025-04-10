@@ -2,13 +2,11 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from handlers.connect import handler
+from handlers.websocket_connect import handler
 
 
 @mock_aws()
-def test_connect_handler_success(
-    environment_vars, dynamodb_table, websocket_api_event, context
-):
+def test_connect_handler_success(environment_vars, dynamodb_table, websocket_api_event, context):
     """Test successful connection handling"""
     boto3.setup_default_session(region_name="us-east-1")
     response = handler(websocket_api_event, context)
@@ -22,17 +20,12 @@ def test_connect_handler_success(
     items = result["Items"]
 
     assert len(items) == 1
-    assert (
-        items[0]["connection_id"]["S"]
-        == websocket_api_event["requestContext"]["connectionId"]
-    )
+    assert items[0]["connection_id"]["S"] == websocket_api_event["requestContext"]["connectionId"]
     assert "session_id" in items[0]
 
 
 @mock_aws()
-def test_connect_handler_missing_connection_id(
-    environment_vars, dynamodb_table, context
-):
+def test_connect_handler_missing_connection_id(environment_vars, dynamodb_table, context):
     """Test handling of missing connectionId"""
     boto3.setup_default_session(region_name="us-east-1")
     event = {"requestContext": {}, "headers": {"Host": "test-host"}}
@@ -51,9 +44,7 @@ def test_connect_handler_missing_connection_id(
     ],
 )
 @mock_aws()
-def test_connect_handler_invalid_event(
-    environment_vars, dynamodb_table, event_data, context
-):
+def test_connect_handler_invalid_event(environment_vars, dynamodb_table, event_data, context):
     """Test handling of invalid event structures"""
     response = handler(event_data, context)
     assert response["statusCode"] == 400
@@ -82,9 +73,7 @@ def test_connect_handler_duplicate_connection(
 
 
 @mock_aws()
-def test_connect_handler_table_not_exists(
-    environment_vars, websocket_api_event, context
-):
+def test_connect_handler_table_not_exists(environment_vars, websocket_api_event, context):
     """Test handling when DynamoDB table doesn't exist"""
     boto3.setup_default_session(region_name="us-east-1")
     # Don't create the table

@@ -8,11 +8,12 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
+from shared.jwt_handler import JWTDecoder
 
 logger = Logger(service="websocket-message-handler")
 
-from invoke_agent import BedrockAgent
-from utilities import format_response
+from shared.invoke_agent import BedrockAgent
+from shared.utilities import format_response
 
 
 def send_websocket_message(
@@ -29,9 +30,7 @@ def send_websocket_message(
     """
     try:
         logger.info("Sending message to connection %s - %s", connection_id, message)
-        management_api.post_to_connection(
-            ConnectionId=connection_id, Data=json.dumps(message)
-        )
+        management_api.post_to_connection(ConnectionId=connection_id, Data=json.dumps(message))
     except ClientError as e:
         if e.response["Error"]["Code"] == "GoneException":
             logger.warning("Connection %s no longer exists", connection_id)
@@ -95,6 +94,10 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
         API Gateway response dictionary
     """
     try:
+        # Generate sample JWT Token using JWTDecoder
+        jwt_decoder = JWTDecoder()
+        token = jwt_decoder.generate_sample_token()
+
         # Create SQSEvent from the raw event dictionary
         sqs_event = SQSEvent(event)
         for record in sqs_event.records:
@@ -127,9 +130,7 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
             message = body.get("message")
             if not message:
                 logger.error("Missing required 'message' field")
-                return format_response(
-                    400, {"message": "Missing required 'message' field"}
-                )
+                return format_response(400, {"message": "Missing required 'message' field"})
 
             # Invoke Bedrock agent
             try:
@@ -137,8 +138,25 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
                     os.environ.get("BEDROCK_AGENT_ID"),
                     os.environ.get("BEDROCK_AGENT_ALIAS_ID"),
                 )
+                # Extract claims from token
+                token_claims = jwt_decoder.get_token_claims(token, verify=False)
+                name = token_claims.get("name")
+                roles = ",".join(token_claims.get("roles", []))
+
+                # Create session state with token, name and roles
+                session_state = {
+                    "promptSessionAttributes": {
+                        "name": name,  # Get name from event or empty string
+                        "roles": roles,  # Get roles from event or empty list
+                        # ... existing session attributes ...
+                    },
+                    # ... rest of session_state ...
+                }
+
+                logger.info(f"session_state: {session_state}")
+
                 agent_response = bedrock_agent.invoke(
-                    message, session_id, enable_trace=True
+                    message, session_id, enable_trace=True, session_state=session_state
                 )
 
                 # Prepare response with timestamp
@@ -156,9 +174,7 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
                 send_websocket_message(connection_id, response_payload, management_api)
                 logger.info("Successfully sent agent response to client")
 
-                return format_response(
-                    200, {"message": "Message processed successfully"}
-                )
+                return format_response(200, {"message": "Message processed successfully"})
 
             except ClientError as e:
                 if e.response["Error"]["Code"] == "GoneException":

@@ -40,7 +40,7 @@ class BedrockAgentStack(Stack):
             self,
             "StructuredResponseHandler",
             runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="structured_response.handler",
+            handler="ag_structured_response.handler",
             code=lambda_.Code.from_asset(lambda_dir),
             environment={
                 "POWERTOOLS_SERVICE_NAME": "structured-response-handler",
@@ -61,9 +61,7 @@ class BedrockAgentStack(Stack):
         structured_response_action = bedrock.AgentActionGroup(
             name="structured_response",
             description="Use this function ALWAYS to provide a structured JSON response to the user",
-            executor=bedrock.ActionGroupExecutor.fromlambda_function(
-                structured_response_function
-            ),
+            executor=bedrock.ActionGroupExecutor.fromlambda_function(structured_response_function),
             enabled=True,
             function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
@@ -100,7 +98,7 @@ class BedrockAgentStack(Stack):
 
         # Use path.join to create a platform-independent path
         this_dir = os.path.dirname(__file__)
-        misc_dir = os.path.join(os.path.dirname(this_dir), "Misc")
+        misc_dir = os.path.join(os.path.dirname(this_dir), "misc")
 
         # Create IAM role for Bedrock agent with more specific principal
         agent_role = iam.Role(
@@ -148,12 +146,8 @@ class BedrockAgentStack(Stack):
         #     )
         # )
 
-        with open(
-            os.path.join(misc_dir, "kb_instructions.txt"), "r", encoding="utf-8"
-        ) as file:
-            kb_instruction = (
-                file.read().strip()
-            )  # reads entire file into a single string
+        with open(os.path.join(misc_dir, "kb_instructions.txt"), "r", encoding="utf-8") as file:
+            kb_instruction = file.read().strip()  # reads entire file into a single string
 
         knowledge_base = bedrock.VectorKnowledgeBase(
             self,
@@ -178,14 +172,8 @@ class BedrockAgentStack(Stack):
         #     function_arn=structured_response_function_arn,
         # )
 
-
-
-        with open(
-            os.path.join(misc_dir, "agent_instructions.txt"), "r", encoding="utf-8"
-        ) as file:
-            agent_instruction = (
-                file.read().strip()
-            )  # reads entire file into a single string
+        with open(os.path.join(misc_dir, "agent_instructions.txt"), "r", encoding="utf-8") as file:
+            agent_instruction = file.read().strip()  # reads entire file into a single string
         agent = bedrock.Agent(
             self,
             "ChatAgent",
@@ -251,8 +239,3 @@ class BedrockAgentStack(Stack):
             description="Knowledge Base ID",
             export_name="KnowledgeBaseId",
         )
-
-
-
-
-

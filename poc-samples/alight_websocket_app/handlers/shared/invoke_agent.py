@@ -56,7 +56,7 @@ class BedrockAgent:
             inputText=query,
             # enableTrace=enable_trace,
             # endSession=False,
-            # sessionState=session_state,
+            sessionState=session_state,
         )
         end_time = time.time()
         response_time = end_time - start_time

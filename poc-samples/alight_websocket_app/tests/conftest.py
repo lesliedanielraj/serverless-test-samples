@@ -68,9 +68,7 @@ def sqs_event():
         "Records": [
             {
                 "body": '{"message": "test message"}',
-                "messageAttributes": {
-                    "connectionId": {"stringValue": "test-connection-123"}
-                },
+                "messageAttributes": {"connectionId": {"stringValue": "test-connection-123"}},
             }
         ]
     }

@@ -5,7 +5,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
-from utilities import format_response, validate_connection_id, validate_input
+from shared.utilities import format_response, validate_connection_id
 
 logger = Logger(service="websocket-disconnect-handler")
 
@@ -32,9 +32,7 @@ def handler(event: dict, context: LambdaContext):
             table.delete_item(Key={"connection_id": connection_id})
         return format_response(200, {"message": "Disconnected"})
     except ClientError as e:
-        logger.exception(
-            "AWS service error", extra={"error_code": e.response["Error"]["Code"]}
-        )
+        logger.exception("AWS service error", extra={"error_code": e.response["Error"]["Code"]})
         return format_response(500, {"message": "Internal server error"})
     except Exception as e:
         logger.exception("Failed to disconnect")

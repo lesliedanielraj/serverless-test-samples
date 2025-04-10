@@ -27,4 +27,3 @@ websocket_api_stack = WebSocketStack(
 )
 
 app.synth()
-

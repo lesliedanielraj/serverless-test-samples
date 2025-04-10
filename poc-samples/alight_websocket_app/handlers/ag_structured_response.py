@@ -58,9 +58,7 @@ def create_structured_response(input_text: str) -> Dict[str, Any]:
             "response_type": "general",
             "message": input_text,
             "confidence": 1.0,
-            "metadata": {
-                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
-            },
+            "metadata": {"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()},
         }
 
         # Validate the response
@@ -84,9 +82,7 @@ def create_structured_response(input_text: str) -> Dict[str, Any]:
         }
 
 
-def get_parameter_value(
-    parameters: list, param_name: str, required: bool = False
-) -> Any:
+def get_parameter_value(parameters: list, param_name: str, required: bool = False) -> Any:
     try:
         value = next(
             (param["value"] for param in parameters if param.get("name") == param_name),
