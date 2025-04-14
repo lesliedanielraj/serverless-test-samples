@@ -17,12 +17,12 @@ def handler(event: dict, context: LambdaContext):
         logger.error("Invalid connection ID")
         return {"statusCode": 400, "body": '{"message": "Invalid connection ID"}'}
 
-    dynamodb = boto3.resource("dynamodb")
-    table = dynamodb.Table(os.environ["CONNECTIONS_TABLE"])
-
     connection_id = event["requestContext"]["connectionId"]
     logger.append_keys(connection_id=connection_id)
     logger.info("Processing connection request")
+
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table(os.environ["CONNECTIONS_TABLE"])
 
     try:
         session_id = str(uuid.uuid4())

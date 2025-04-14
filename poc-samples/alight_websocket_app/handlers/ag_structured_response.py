@@ -3,6 +3,7 @@ import json
 from typing import Any, Dict
 
 from aws_lambda_powertools import Logger
+from shared.utilities import get_parameter_value
 
 logger = Logger(service="structured-response-handler")
 
@@ -80,25 +81,6 @@ def create_structured_response(input_text: str) -> Dict[str, Any]:
             "error_message": str(e),
             "details": {},
         }
-
-
-def get_parameter_value(parameters: list, param_name: str, required: bool = False) -> Any:
-    try:
-        value = next(
-            (param["value"] for param in parameters if param.get("name") == param_name),
-            None,
-        )
-
-        if required and value is None:
-            raise ValueError(f"Required parameter '{param_name}' not found")
-
-        return value
-
-    except Exception as e:
-        logger.error(f"Error getting parameter {param_name}: {str(e)}")
-        if required:
-            raise
-        return None
 
 
 @logger.inject_lambda_context(log_event=True)

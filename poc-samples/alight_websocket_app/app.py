@@ -26,4 +26,6 @@ websocket_api_stack = WebSocketStack(
     bedrock_agent_alias_id=bedrock_agent_stack.agent_alias_id,
 )
 
+websocket_api_stack.add_dependency(bedrock_agent_stack)
+
 app.synth()

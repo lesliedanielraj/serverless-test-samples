@@ -141,6 +141,7 @@ class WebSocketStack(Stack):
             f"{construct_id}-send-message-dlq",
             retention_period=Duration.days(1),
             fifo=True,
+            encryption=sqs.QueueEncryption.SQS_MANAGED,  # Enable server-side encryption
         )
         message_queue = sqs.Queue(
             self,
@@ -148,6 +149,7 @@ class WebSocketStack(Stack):
             # visibility_timeout=Duration.seconds(30),
             retention_period=Duration.days(1),
             fifo=True,
+            encryption=sqs.QueueEncryption.SQS_MANAGED,  # Enable server-side encryption
             dead_letter_queue=sqs.DeadLetterQueue(max_receive_count=3, queue=message_queue_dlq),
         )
 

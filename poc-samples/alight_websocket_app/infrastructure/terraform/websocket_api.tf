@@ -120,6 +120,7 @@ resource "aws_sqs_queue" "message_queue" {
   fifo_queue                  = true
   content_based_deduplication = false
   message_retention_seconds   = 86400 # 1 day
+  sqs_managed_sse_enabled    = true   # Enable server-side encryption with AWS managed key
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.message_queue_dlq.arn
@@ -132,6 +133,7 @@ resource "aws_sqs_queue" "message_queue_dlq" {
   name                        = "send-message-dlq.fifo"
   fifo_queue                  = true
   message_retention_seconds   = 86400 # 1 day
+  sqs_managed_sse_enabled    = true   # Enable server-side encryption with AWS managed key
 }
 
 # IAM role for API Gateway service proxy

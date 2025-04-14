@@ -41,4 +41,11 @@ echo "Redeploying all stacks with CDK..."
 cdk synth
 cdk deploy --all --require-approval never
 
+# Make the sync script executable
+chmod +x ./sync_kb.sh
+
+# Run the knowledge base sync after deployment
+echo "Starting knowledge base sync..."
+./sync_kb.sh
+
 echo "Reset complete!"

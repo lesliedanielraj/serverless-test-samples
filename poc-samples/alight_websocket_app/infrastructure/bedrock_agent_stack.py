@@ -90,6 +90,62 @@ class BedrockAgentStack(Stack):
             ),
         )
 
+        # Create the dashboard details Lambda function
+        get_dashboard_details_function = lambda_.Function(
+            self,
+            "DashboardDetailsHandler",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="ag_dashboard_details.handler",
+            code=lambda_.Code.from_asset(lambda_dir),
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "dashboard-details-handler",
+                "LOG_LEVEL": "INFO",
+            },
+            layers=[powertools_layer],
+            timeout=Duration.seconds(30),
+        )
+
+        # Grant QuickSight permissions to the dashboard details function
+        get_dashboard_details_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "quicksight:DescribeDashboard",
+                ],
+                resources=[f"arn:aws:quicksight:{self.region}:{self.account}:dashboard/*"],
+                effect=iam.Effect.ALLOW,
+            )
+        )
+        # Grant the Lambda permission to be invoked by Bedrock service
+        get_dashboard_details_function.add_permission(
+            "AllowBedrockInvoke",
+            principal=iam.ServicePrincipal("bedrock.amazonaws.com"),
+            action="lambda:InvokeFunction",
+        )
+        # Create the dashboard details action group
+        get_dashboard_details_action = bedrock.AgentActionGroup(
+            name="get_dashboard_details",
+            description="Use this function to get information like URL about a specific dashboard",
+            executor=bedrock.ActionGroupExecutor.fromlambda_function(
+                get_dashboard_details_function
+            ),
+            enabled=True,
+            function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
+                functions=[
+                    aws_bedrock.CfnAgent.FunctionProperty(
+                        name="get_dashboard_details",
+                        description="Retrieves detailed information about a dashboard using its ID",
+                        parameters={
+                            "dashboard_id": aws_bedrock.CfnAgent.ParameterDetailProperty(
+                                type="string",
+                                description="The ID of the QuickSight dashboard to retrieve details for",
+                                required=True,
+                            ),
+                        },
+                    )
+                ]
+            ),
+        )
+
         dashboards_bucket = s3.Bucket.from_bucket_name(
             self,
             "bedrockagentstack-quicksight-dashboards",
@@ -116,6 +172,9 @@ class BedrockAgentStack(Stack):
                     "bedrock:Invoke",
                     "bedrock:InvokeModel",
                     "bedrock:InvokeModelWithResponseStream",
+                    "bedrock-agent:StartKnowledgeBaseSync",
+                    "bedrock-agent:GetKnowledgeBaseSync",
+                    "bedrock-agent:GetKnowledgeBaseSyncJob",
                 ],
                 resources=[f"arn:aws:bedrock:{self.region}:{self.account}:*"],
                 effect=iam.Effect.ALLOW,
@@ -185,6 +244,7 @@ class BedrockAgentStack(Stack):
         )
         agent.add_knowledge_base(knowledge_base)
         agent.add_action_group(structured_response_action)
+        agent.add_action_group(get_dashboard_details_action)  # Add the new action group
 
         # Create agent alias
         agent_alias = bedrock.AgentAlias(

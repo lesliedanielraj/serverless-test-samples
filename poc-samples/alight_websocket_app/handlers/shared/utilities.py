@@ -45,3 +45,22 @@ def validate_connection_id(event):
     except Exception as e:
         print(f"Error validating connectionId: {str(e)}")
         return False
+
+
+def get_parameter_value(parameters: list, param_name: str, required: bool = False) -> Any:
+    try:
+        value = next(
+            (param["value"] for param in parameters if param.get("name") == param_name),
+            None,
+        )
+
+        if required and value is None:
+            raise ValueError(f"Required parameter '{param_name}' not found")
+
+        return value
+
+    except Exception as e:
+        logger.error(f"Error getting parameter {param_name}: {str(e)}")
+        if required:
+            raise
+        return None

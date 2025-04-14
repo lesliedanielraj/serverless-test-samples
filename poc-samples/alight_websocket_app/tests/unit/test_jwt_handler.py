@@ -109,7 +109,7 @@ def test_generate_sample_token(jwt_decoder):
     assert decoded["jti"] == "unique-jwt-id-123"
 
     # Verify custom claims
-    assert decoded["name"] == "John Doe"
+    assert decoded["name"] == "Leslie Daniel Raj"
     assert decoded["email"] == "john.doe@example.com"
     assert set(decoded["roles"]) == {"user", "admin"}
     assert set(decoded["permissions"]) == {"read", "write", "delete"}
