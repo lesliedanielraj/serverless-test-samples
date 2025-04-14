@@ -231,12 +231,12 @@ class BedrockAgentStack(Stack):
         #     function_arn=structured_response_function_arn,
         # )
 
-        with open(os.path.join(misc_dir, "agent_instructions.txt"), "r", encoding="utf-8") as file:
+        with open(os.path.join(misc_dir, "agent_inst_new.txt"), "r", encoding="utf-8") as file:
             agent_instruction = file.read().strip()  # reads entire file into a single string
         agent = bedrock.Agent(
             self,
             "ChatAgent",
-            foundation_model=bedrock.BedrockFoundationModel.AMAZON_NOVA_MICRO_V1,
+            foundation_model=bedrock.BedrockFoundationModel.AMAZON_NOVA_PRO_V1,
             instruction=agent_instruction,
             user_input_enabled=True,
             code_interpreter_enabled=False,

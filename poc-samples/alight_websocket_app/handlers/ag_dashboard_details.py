@@ -18,9 +18,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     function = event["function"]
     parameters = event.get("parameters", [])
     session_attributes = event["sessionAttributes"]
-
     prompt_session_attributes = event["promptSessionAttributes"]
-    # Create and return the structured response
+
+    # Create and return the expected structured response
+    response_body = {
+        "TEXT": {
+            "body": ""
+        }
+    }
     function_response = {
         "actionGroup": action_group,
         "function": function,
@@ -28,11 +33,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     }
     action_response = {
         "messageVersion": "1.0",
-        "sessionAttributes": session_attributes,
-        "promptSessionAttributes": prompt_session_attributes,
         "response": {}
     }
     try:
+        # set session and promptSession attributes
+        if session_attributes:
+            action_response["sessionAttributes"] = session_attributes
+        if prompt_session_attributes:
+            action_response["promptSessionAttributes"] = prompt_session_attributes
+
         # Business Logic goes here
         dashboard_id = get_parameter_value(parameters, "dashboard_id")
         if not dashboard_id:
@@ -41,7 +50,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         response = {"dashboard_url": f"https://quicksight-test.dasboard/{dashboard_id}"}
 
         # set a successful response
-        function_response["functionResponse"]["responseBody"] = json.dumps(response)
+        response_body["TEXT"]["body"] = json.dumps(response)
+        function_response["functionResponse"]["responseBody"] = response_body
         action_response["response"] = function_response
 
         logger.info(action_response)
