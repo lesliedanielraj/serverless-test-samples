@@ -11,8 +11,19 @@ def valid_event():
         "actionGroup": "DashboardDetails",
         "function": "GetDashboardDetails",
         "parameters": [{"name": "dashboard_id", "value": "test-dashboard-123"}],
-        "sessionAttributes": {},
-        "promptSessionAttributes": {},
+        "sessionAttributes": {
+            "quicksight_dashboard_url": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            "quicksight_dashboard_id": "XXXXXXXXXXXXXXXXXX",
+            "quicksight_account_id": "XXXXXXXXXXXXXXXX",
+            "quicksight_region": "us-west-2",
+            "quicksight_namespace": "default",
+        },
+        "promptSessionAttributes": {
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "company": "Example Inc.",
+            "role": "Manager",
+        },
     }
 
 
@@ -39,7 +50,9 @@ def test_handler_success(valid_event, context):
     assert response["response"]["function"] == "GetDashboardDetails"
 
     # Parse response body
-    response_body = json.loads(response["response"]["functionResponse"]["responseBody"])
+    # Direct dictionary access
+    # response_body = response["response"]["functionResponse"]["responseBody"]
+    response_body = json.loads(response["response"]["functionResponse"]["responseBody"]["TEXT"]["body"])
     assert "dashboard_url" in response_body
     assert response_body["dashboard_url"] == f"https://quicksight-test.dasboard/test-dashboard-123"
 
