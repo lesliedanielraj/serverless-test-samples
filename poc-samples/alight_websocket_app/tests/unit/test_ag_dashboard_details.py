@@ -65,6 +65,7 @@ def test_handler_missing_parameter(invalid_event, context):
     assert error_body["error_code"] == "HANDLER_ERROR"
     assert "error_message" in error_body
 
+
 #
 # @mock_aws
 # def test_handler_invalid_input(context):
@@ -83,5 +84,3 @@ def test_handler_missing_parameter(invalid_event, context):
 #     assert error_body["response_type"] == "error"
 #     assert error_body["error_code"] == "HANDLER_ERROR"
 #     assert "error_message" in error_body
-
-

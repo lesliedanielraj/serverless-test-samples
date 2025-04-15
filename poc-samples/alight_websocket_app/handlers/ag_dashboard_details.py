@@ -21,20 +21,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     prompt_session_attributes = event["promptSessionAttributes"]
 
     # Create and return the expected structured response
-    response_body = {
-        "TEXT": {
-            "body": ""
-        }
-    }
-    function_response = {
-        "actionGroup": action_group,
-        "function": function,
-        "functionResponse": {}
-    }
-    action_response = {
-        "messageVersion": "1.0",
-        "response": {}
-    }
+    response_body = {"TEXT": {"body": ""}}
+    function_response = {"actionGroup": action_group, "function": function, "functionResponse": {}}
+    action_response = {"messageVersion": "1.0", "response": {}}
     try:
         # set session and promptSession attributes
         if session_attributes:
@@ -73,4 +62,3 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     finally:
         return action_response
-
