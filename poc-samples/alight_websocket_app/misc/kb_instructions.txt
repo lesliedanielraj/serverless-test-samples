@@ -1,1 +1,1 @@
-Use this knowledge base to answer questions about dashboards.
+Use this knowledge base to search for QuickSight dashboards based on user input. This knowledgebase contains information about dashboards including dashboard_id, dashboard_name and description.

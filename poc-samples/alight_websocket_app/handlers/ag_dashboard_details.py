@@ -2,23 +2,26 @@ import datetime
 import json
 from typing import Any, Dict
 
+import boto3
 from aws_lambda_powertools import Logger
 from shared.utilities import get_parameter_value
 
 logger = Logger(service="dashboard-details-handler")
-
 
 @logger.inject_lambda_context(log_event=True)
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Lambda handler for structured response action group.
     """
-    agent = event["agent"]
     action_group = event["actionGroup"]
     function = event["function"]
     parameters = event.get("parameters", [])
     session_attributes = event["sessionAttributes"]
     prompt_session_attributes = event["promptSessionAttributes"]
+
+    quicksight = boto3.client("quicksight")
+    account_id = boto3.client("sts").get_caller_identity()["Account"]
+    region = boto3.Session().region_name
 
     # Create and return the expected structured response
     response_body = {"TEXT": {"body": ""}}
@@ -36,20 +39,42 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if not dashboard_id:
             raise ValueError("dashboard_id is required")
 
-        response = {"dashboard_url": f"https://quicksight-test.dasboard/{dashboard_id}"}
+        # get the embedded url for the dashboard using generate_embed_url_for_anonymous_user boto3 quicksight client
+        quicksight_response = quicksight.generate_embed_url_for_anonymous_user(
+            AwsAccountId=account_id,
+            Namespace="default",
+            ExperienceConfiguration={
+                "Dashboard": {
+                    "InitialDashboardId": dashboard_id,
+                }
+            },
+            AuthorizedResourceArns=[
+                f"arn:aws:quicksight:{region}:{account_id}:dashboard/{dashboard_id}",
+            ],
+            SessionLifetimeInMinutes=60,
+            SessionTags=[
+                {
+                    "Key": "user",
+                    "Value": f"{prompt_session_attributes["name"]}",
+                },
+                {
+                    "Key": "roles",
+                    "Value": f"{prompt_session_attributes["roles"]}",
+                },
+            ],
+        )
+
+        response = {"dashboard_url": quicksight_response["EmbedUrl"]}
 
         # set a successful response
         response_body["TEXT"]["body"] = json.dumps(response)
         function_response["functionResponse"]["responseBody"] = response_body
         action_response["response"] = function_response
 
-        logger.info(action_response)
-        return action_response
-
     except Exception as e:
-        logger.error(f"Handler error: {str(e)}")
+        logger.error(f"QuickSight embedding error: {str(e)}")
         error_response = {
-            "response_type": "error",
+            "response_type": "ERROR",
             "error_code": "HANDLER_ERROR",
             "error_message": str(e),
             "details": {},
@@ -60,5 +85,5 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         function_response["functionResponse"]["responseBody"] = json.dumps(error_response)
         action_response["response"] = function_response
 
-    finally:
-        return action_response
+    logger.info(action_response)
+    return action_response

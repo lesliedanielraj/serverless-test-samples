@@ -8,6 +8,7 @@ cdklabs.generative-ai-cdk-constructs
 
 jsonschema~=4.23.0
 pytest~=8.3.4
+pytest-mock~=3.14.0
 moto~=5.1.0
 aws_lambda_powertools~=3.7.0
 jmespath~=1.0.1

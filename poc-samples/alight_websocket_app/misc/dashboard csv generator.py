@@ -16,7 +16,7 @@ dashboard_data = [
         "description": "Detailed analysis of medical and prescription claims patterns, costs and trends",
     },
     {
-        "dashboard_id": str(uuid.uuid4()),
+        "dashboard_id": "98e52543-b1f1-4478-a43b-752976d8821b",
         "dashboard_name": "401k Plan Summary",
         "description": "Overview of 401k plan participation, contribution rates and investment allocations",
     },

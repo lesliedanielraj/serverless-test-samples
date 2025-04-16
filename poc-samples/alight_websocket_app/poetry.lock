@@ -259,6 +259,23 @@ publication = ">=0.0.3"
 typeguard = ">=2.13.3,<4.3.0"
 
 [[package]]
+name = "aws-cdk-asset-kubectl-v20"
+version = "2.1.4"
+description = "A Lambda Layer that contains kubectl v1.20"
+optional = false
+python-versions = "~=3.8"
+groups = ["main"]
+files = [
+    {file = "aws_cdk.asset_kubectl_v20-2.1.4-py3-none-any.whl", hash = "sha256:14a194e14adbf3868a8105b07e8714e10e6621a22beca9b4859a82a9cfbe68f6"},
+    {file = "aws_cdk_asset_kubectl_v20-2.1.4.tar.gz", hash = "sha256:c723c94c6c89283efef779ca44bea8e2e312d49b07bf5beaf6f27340e1fecff4"},
+]
+
+[package.dependencies]
+jsii = ">=1.106.0,<2.0.0"
+publication = ">=0.0.3"
+typeguard = ">=2.13.3,<4.3.0"
+
+[[package]]
 name = "aws-cdk-asset-node-proxy-agent-v6"
 version = "2.1.0"
 description = "@aws-cdk/asset-node-proxy-agent-v6"
@@ -276,42 +293,25 @@ publication = ">=0.0.3"
 typeguard = ">=2.13.3,<5.0.0"
 
 [[package]]
-name = "aws-cdk-cloud-assembly-schema"
-version = "40.7.0"
-description = "Schema for the protocol between CDK framework and CDK CLI"
+name = "aws-cdk-lib"
+version = "2.128.0"
+description = "Version 2 of the AWS Cloud Development Kit library"
 optional = false
 python-versions = "~=3.8"
 groups = ["main"]
 files = [
-    {file = "aws_cdk.cloud_assembly_schema-40.7.0-py3-none-any.whl", hash = "sha256:a86de4f46a72f9445f0a0ae646c348702041047c72d10b76e3b4c8dc5e460ee1"},
-    {file = "aws_cdk_cloud_assembly_schema-40.7.0.tar.gz", hash = "sha256:8269a74cce261e56750290a2492f04d0e6825913d321a8ab17ba3b5f872fc193"},
+    {file = "aws-cdk-lib-2.128.0.tar.gz", hash = "sha256:796459062daa0dbe0581925874db121d4c220295c6c35e73dedfe39e82ca301f"},
+    {file = "aws_cdk_lib-2.128.0-py3-none-any.whl", hash = "sha256:49170b21cb738d30d67f7aa361b78ba3a8b711f8dd15523cbfe64710f9386553"},
 ]
 
 [package.dependencies]
-jsii = ">=1.108.0,<2.0.0"
-publication = ">=0.0.3"
-typeguard = ">=2.13.3,<4.3.0"
-
-[[package]]
-name = "aws-cdk-lib"
-version = "2.184.1"
-description = "Version 2 of the AWS Cloud Development Kit library"
-optional = false
-python-versions = "~=3.9"
-groups = ["main"]
-files = [
-    {file = "aws_cdk_lib-2.184.1-py3-none-any.whl", hash = "sha256:2ab33a9bc8a42a425ae9e9214dd92e5e5d1885e210b4bfe16679498b1ea27b2e"},
-    {file = "aws_cdk_lib-2.184.1.tar.gz", hash = "sha256:dc57edaf8ceb21f68c6ebee214194f7b9d4ef013d27b9bfe93e35d71b965b013"},
-]
-
-[package.dependencies]
-"aws-cdk.asset-awscli-v1" = ">=2.2.227,<3.0.0"
-"aws-cdk.asset-node-proxy-agent-v6" = ">=2.1.0,<3.0.0"
-"aws-cdk.cloud-assembly-schema" = ">=40.7.0,<41.0.0"
+"aws-cdk.asset-awscli-v1" = ">=2.2.202,<3.0.0"
+"aws-cdk.asset-kubectl-v20" = ">=2.1.2,<3.0.0"
+"aws-cdk.asset-node-proxy-agent-v6" = ">=2.0.1,<3.0.0"
 constructs = ">=10.0.0,<11.0.0"
-jsii = ">=1.109.0,<2.0.0"
+jsii = ">=1.94.0,<2.0.0"
 publication = ">=0.0.3"
-typeguard = ">=2.13.3,<4.3.0"
+typeguard = ">=2.13.3,<2.14.0"
 
 [[package]]
 name = "aws-lambda-powertools"
@@ -1762,4 +1762,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "a7caedb61d20b373c60b9eaa7f226cd7cb6fb96fcd8e862bbe29a796fb567363"
+content-hash = "055d10e88b92f3f839306f741970b0698337ce8b1e19ce66e55a6c5e8d5167d3"

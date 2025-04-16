@@ -1,0 +1,25 @@
+{
+  "messageVersion": "1.0",
+  "function": "get_dashboard_details",
+  "parameters": [
+    {
+      "name": "dashboard_id",
+      "type": "string",
+      "value": "98e52543-b1f1-4478-a43b-752976d8821b"
+    }
+  ],
+  "sessionId": "dcf94531-64ae-4645-9cbd-5f8d9bf306c2",
+  "agent": {
+    "name": "bedrock-agent-alightbedrockagentstack-chatagent-22756984",
+    "version": "1",
+    "id": "WT6FCCEPO7",
+    "alias": "FUIAMFB6BT"
+  },
+  "actionGroup": "get_dashboard_details",
+  "sessionAttributes": {},
+  "promptSessionAttributes": {
+    "name": "Leslie Daniel Raj",
+    "roles": "user,admin"
+  },
+  "inputText": "98e52543-b1f1-4478-a43b-752976d8821b"
+}

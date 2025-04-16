@@ -98,6 +98,11 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
         jwt_decoder = JWTDecoder()
         token = jwt_decoder.generate_sample_token()
 
+        management_api = boto3.client(
+            "apigatewaymanagementapi",
+            endpoint_url=os.environ.get("WEBSOCKET_CALLBACK_URL"),
+        )
+
         # Create SQSEvent from the raw event dictionary
         sqs_event = SQSEvent(event)
         for record in sqs_event.records:
@@ -167,10 +172,6 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
                 }
 
                 # Send response through WebSocket
-                management_api = boto3.client(
-                    "apigatewaymanagementapi",
-                    endpoint_url=os.environ.get("WEBSOCKET_CALLBACK_URL"),
-                )
                 send_websocket_message(connection_id, response_payload, management_api)
                 logger.info("Successfully sent agent response to client")
 
@@ -187,6 +188,7 @@ def handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
                 return format_response(500, {"message": error_msg})
 
     except Exception as e:
-        error_msg = f"Unexpected error: {str(e)}"
+        error_msg = f"Unexpected Error: {str(e)}"
         logger.exception(error_msg)
+        send_websocket_message(connection_id, e, management_api)
         return format_response(500, {"message": "Internal server error"})
