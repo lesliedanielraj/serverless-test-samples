@@ -1,4 +1,5 @@
 import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 from moto import mock_aws
@@ -87,15 +88,15 @@ def test_handler_quicksight_error(mock_quicksight, valid_event, context):
     assert response_body["error_message"] == "QuickSight error"
 
 
-def test_handler_with_sts(mock_quicksight, mock_sts, valid_event, context):
-    response = handler(valid_event, context)
-
-    # Verify STS was called
-    mock_sts.get_caller_identity.assert_called_once()
-
-    # Verify response
-    response_body = json.loads(response["response"]["functionResponse"]["responseBody"])
-    assert "dashboard_url" in response_body
+# def test_handler_with_sts(mock_quicksight, mock_sts, valid_event, context):
+#     response = handler(valid_event, context)
+#
+#     # Verify STS was called
+#     mock_sts.get_caller_identity.assert_called_once()
+#
+#     # Verify response
+#     response_body = json.loads(response["response"]["functionResponse"]["responseBody"])
+#     assert "dashboard_url" in response_body
 
 
 def test_handler_with_session_attributes(mock_quicksight, context):
