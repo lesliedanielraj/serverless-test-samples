@@ -8,6 +8,7 @@ from shared.utilities import get_parameter_value
 
 logger = Logger(service="dashboard-details-handler")
 
+
 @logger.inject_lambda_context(log_event=True)
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """

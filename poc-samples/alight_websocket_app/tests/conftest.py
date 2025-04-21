@@ -77,12 +77,12 @@ def sqs_event():
 
 @pytest.fixture
 def mock_quicksight():
-    with patch('boto3.client') as mock_client:
+    with patch("boto3.client") as mock_client:
         # Mock the QuickSight client response
         mock_quicksight = MagicMock()
         mock_quicksight.generate_embed_url_for_anonymous_user.return_value = {
-            'EmbedUrl': 'https://quicksight-test.dasboard/test-dashboard-123',
-            'RequestId': 'test-request-id'
+            "EmbedUrl": "https://quicksight-test.dasboard/test-dashboard-123",
+            "RequestId": "test-request-id",
         }
         mock_client.return_value = mock_quicksight
         yield mock_quicksight
@@ -110,10 +110,8 @@ def context():
 
 @pytest.fixture
 def mock_sts():
-    with patch('boto3.client') as mock_client:
+    with patch("boto3.client") as mock_client:
         mock_sts = MagicMock()
-        mock_sts.get_caller_identity.return_value = {
-            'Account': '123456789012'
-        }
+        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
         mock_client.return_value = mock_sts
         yield mock_sts

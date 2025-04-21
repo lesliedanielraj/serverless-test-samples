@@ -17,6 +17,7 @@ from shared.utilities import format_response
 
 dynamodb = boto3.resource("dynamodb")
 
+
 def send_websocket_message(
     connection_id: str, message: Dict[str, Any], management_api: Any
 ) -> None:

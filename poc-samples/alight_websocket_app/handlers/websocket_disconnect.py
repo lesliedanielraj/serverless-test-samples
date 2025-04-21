@@ -11,6 +11,7 @@ logger = Logger(service="websocket-disconnect-handler")
 
 dynamodb = boto3.resource("dynamodb")
 
+
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST)
 def handler(event: dict, context: LambdaContext):
     if not validate_connection_id(event):

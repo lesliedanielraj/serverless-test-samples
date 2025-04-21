@@ -110,12 +110,12 @@ class BedrockAgentStack(Stack):
             iam.PolicyStatement(
                 actions=[
                     "quicksight:DescribeDashboard",
-                    "quicksight:GenerateEmbedUrlForAnonymousUser"
+                    "quicksight:GenerateEmbedUrlForAnonymousUser",
                 ],
                 resources=[
                     f"arn:aws:quicksight:{self.region}:{self.account}:dashboard/*",
                     f"arn:aws:quicksight:{self.region}:{self.account}:user/*",
-                    f"arn:aws:quicksight:{self.region}:{self.account}:namespace/*"
+                    f"arn:aws:quicksight:{self.region}:{self.account}:namespace/*",
                 ],
                 effect=iam.Effect.ALLOW,
             )
@@ -130,7 +130,9 @@ class BedrockAgentStack(Stack):
         get_dashboard_details_action = bedrock.AgentActionGroup(
             name="get_dashboard_details",
             description="Use this function to get information like URL about a specific dashboard",
-            executor=bedrock.ActionGroupExecutor.fromlambda_function(get_dashboard_details_function),
+            executor=bedrock.ActionGroupExecutor.fromlambda_function(
+                get_dashboard_details_function
+            ),
             enabled=True,
             function_schema=aws_bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
