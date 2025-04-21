@@ -15,6 +15,7 @@ logger = Logger(service="websocket-message-handler")
 from shared.invoke_agent import BedrockAgent
 from shared.utilities import format_response
 
+dynamodb = boto3.resource("dynamodb")
 
 def send_websocket_message(
     connection_id: str, message: Dict[str, Any], management_api: Any
@@ -51,7 +52,7 @@ def get_session_id(connection_id: str) -> str:
     Raises:
         ClientError: If DynamoDB query fails
     """
-    table = boto3.resource("dynamodb").Table(os.environ["CONNECTIONS_TABLE"])
+    table = dynamodb.Table(os.environ["CONNECTIONS_TABLE"])
     response = table.query(
         KeyConditionExpression="connection_id = :connection_id",
         ExpressionAttributeValues={":connection_id": connection_id},

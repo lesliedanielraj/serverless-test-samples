@@ -10,6 +10,7 @@ from shared.utilities import format_response, validate_connection_id
 
 logger = Logger(service="websocket-connect-handler")
 
+dynamodb = boto3.resource("dynamodb")
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST)
 def handler(event: dict, context: LambdaContext):
@@ -21,7 +22,6 @@ def handler(event: dict, context: LambdaContext):
     logger.append_keys(connection_id=connection_id)
     logger.info("Processing connection request")
 
-    dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(os.environ["CONNECTIONS_TABLE"])
 
     try:

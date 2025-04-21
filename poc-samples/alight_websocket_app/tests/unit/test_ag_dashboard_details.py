@@ -41,7 +41,6 @@ def invalid_event():
         "promptSessionAttributes": {},
     }
 
-
 def test_handler_success(mock_quicksight, valid_event, context):
     response = handler(valid_event, context)
 
@@ -60,7 +59,7 @@ def test_handler_success(mock_quicksight, valid_event, context):
     assert "dashboard_url" in response_body
     assert response_body["dashboard_url"] == "https://quicksight-test.dasboard/test-dashboard-123"
 
-
+@mock_aws()
 def test_handler_missing_dashboard_id(mock_quicksight, context):
     event = {
         "actionGroup": "DashboardDetails",
@@ -75,7 +74,6 @@ def test_handler_missing_dashboard_id(mock_quicksight, context):
 
     assert response_body["response_type"] == "ERROR"
     assert response_body["error_message"] == "dashboard_id is required"
-
 
 def test_handler_quicksight_error(mock_quicksight, valid_event, context):
     # Mock QuickSight error
@@ -98,7 +96,7 @@ def test_handler_quicksight_error(mock_quicksight, valid_event, context):
 #     response_body = json.loads(response["response"]["functionResponse"]["responseBody"])
 #     assert "dashboard_url" in response_body
 
-
+@mock_aws()
 def test_handler_with_session_attributes(mock_quicksight, context):
     event = {
         "actionGroup": "DashboardDetails",
