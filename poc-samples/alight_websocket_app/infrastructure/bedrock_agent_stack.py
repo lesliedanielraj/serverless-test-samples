@@ -1,11 +1,9 @@
 import os
 
-from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack, aws_bedrock
+from aws_cdk import CfnOutput, Duration, Stack, aws_bedrock
 from aws_cdk import aws_iam as iam
-from aws_cdk import aws_lambda
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_s3 as s3
-from aws_cdk import aws_s3_deployment as s3deploy
 from cdklabs.generative_ai_cdk_constructs import bedrock
 from constructs import Construct
 
@@ -35,6 +33,89 @@ class BedrockAgentStack(Stack):
             layer_version_arn=f"arn:aws:lambda:{self.region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python312-x86_64:10",
         )
 
+        dashboards_bucket = s3.Bucket.from_bucket_name(
+            self,
+            "bedrockagentstack-quicksight-dashboards",
+            bucket_name=f"bedrockagentstack-quicksight-dashboards",
+        )
+
+        # Use path.join to create a platform-independent path
+        this_dir = os.path.dirname(__file__)
+        misc_dir = os.path.join(os.path.dirname(this_dir), "misc")
+
+        # Create IAM role for Bedrock agent with more specific principal
+        agent_role = iam.Role(
+            self,
+            "BedrockAgentRole",
+            assumed_by=iam.ServicePrincipal("bedrock.amazonaws.com"),
+            description="Role for Bedrock Agent to access required resources",
+        )
+
+        # Add necessary permissions for the agent with more specific resource constraints
+        agent_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "bedrock:InvokeAgent",
+                    "bedrock:Invoke",
+                    "bedrock:InvokeModel",
+                    "bedrock:InvokeModelWithResponseStream",
+                    "bedrock-agent:StartKnowledgeBaseSync",
+                    "bedrock-agent:GetKnowledgeBaseSync",
+                    "bedrock-agent:GetKnowledgeBaseSyncJob",
+                ],
+                resources=[f"arn:aws:bedrock:{self.region}:{self.account}:*"],
+                effect=iam.Effect.ALLOW,
+            )
+        )
+
+        # Add S3 permissions for the agent
+        agent_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                ],
+                resources=[
+                    dashboards_bucket.bucket_arn,
+                    f"{dashboards_bucket.bucket_arn}/*",
+                ],
+                effect=iam.Effect.ALLOW,
+            )
+        )
+
+        with open(os.path.join(misc_dir, "kb_instructions.txt"), "r", encoding="utf-8") as file:
+            kb_instruction = file.read().strip()  # reads entire file into a single string
+
+        knowledge_base = bedrock.VectorKnowledgeBase(
+            self,
+            "KnowledgeBase",
+            embeddings_model=bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V1,
+            instruction=kb_instruction,
+        )
+
+        bedrock.S3DataSource(
+            self,
+            "DataSource",
+            bucket=dashboards_bucket,
+            knowledge_base=knowledge_base,
+            data_source_name="dashboards",
+            chunking_strategy=bedrock.ChunkingStrategy.FIXED_SIZE,
+        )
+
+        with open(os.path.join(misc_dir, "agent_inst_new.txt"), "r", encoding="utf-8") as file:
+            agent_instruction = file.read().strip()  # reads entire file into a single string
+        agent = bedrock.Agent(
+            self,
+            "ChatAgent",
+            foundation_model=bedrock.BedrockFoundationModel.AMAZON_NOVA_PRO_V1,
+            instruction=agent_instruction,
+            user_input_enabled=True,
+            code_interpreter_enabled=False,
+            should_prepare_agent=True,
+        )
+        agent.add_knowledge_base(knowledge_base)
+
+        # region structured response action group
         # Create the structured response Lambda function
         structured_response_function = lambda_.Function(
             self,
@@ -89,7 +170,10 @@ class BedrockAgentStack(Stack):
                 ]
             ),
         )
+        agent.add_action_group(structured_response_action)  # Add the new action group
+        # endregion
 
+        # region get dashboard details action group
         # Create the dashboard details Lambda function
         get_dashboard_details_function = lambda_.Function(
             self,
@@ -151,105 +235,8 @@ class BedrockAgentStack(Stack):
             ),
         )
 
-        dashboards_bucket = s3.Bucket.from_bucket_name(
-            self,
-            "bedrockagentstack-quicksight-dashboards",
-            bucket_name=f"bedrockagentstack-quicksight-dashboards",
-        )
-
-        # Use path.join to create a platform-independent path
-        this_dir = os.path.dirname(__file__)
-        misc_dir = os.path.join(os.path.dirname(this_dir), "misc")
-
-        # Create IAM role for Bedrock agent with more specific principal
-        agent_role = iam.Role(
-            self,
-            "BedrockAgentRole",
-            assumed_by=iam.ServicePrincipal("bedrock.amazonaws.com"),
-            description="Role for Bedrock Agent to access required resources",
-        )
-
-        # Add necessary permissions for the agent with more specific resource constraints
-        agent_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "bedrock:InvokeAgent",
-                    "bedrock:Invoke",
-                    "bedrock:InvokeModel",
-                    "bedrock:InvokeModelWithResponseStream",
-                    "bedrock-agent:StartKnowledgeBaseSync",
-                    "bedrock-agent:GetKnowledgeBaseSync",
-                    "bedrock-agent:GetKnowledgeBaseSyncJob",
-                ],
-                resources=[f"arn:aws:bedrock:{self.region}:{self.account}:*"],
-                effect=iam.Effect.ALLOW,
-            )
-        )
-
-        # Add S3 permissions for the agent
-        agent_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                ],
-                resources=[
-                    dashboards_bucket.bucket_arn,
-                    f"{dashboards_bucket.bucket_arn}/*",
-                ],
-                effect=iam.Effect.ALLOW,
-            )
-        )
-
-        # Add Lambda invoke permissions for the agent
-        # agent_role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=["lambda:InvokeFunction"],
-        #         resources=[structured_response_function_arn],
-        #         effect=iam.Effect.ALLOW,
-        #     )
-        # )
-
-        with open(os.path.join(misc_dir, "kb_instructions.txt"), "r", encoding="utf-8") as file:
-            kb_instruction = file.read().strip()  # reads entire file into a single string
-
-        knowledge_base = bedrock.VectorKnowledgeBase(
-            self,
-            "KnowledgeBase",
-            embeddings_model=bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V1,
-            instruction=kb_instruction,
-        )
-
-        bedrock.S3DataSource(
-            self,
-            "DataSource",
-            bucket=dashboards_bucket,
-            knowledge_base=knowledge_base,
-            data_source_name="dashboards",
-            chunking_strategy=bedrock.ChunkingStrategy.FIXED_SIZE,
-        )
-
-        # Assuming structured_response_function_arn is a string containing the Lambda ARN
-        # structured_response_function = aws_lambda.Function.from_function_arn(
-        #     self,
-        #     "StructuredResponseFunction",
-        #     function_arn=structured_response_function_arn,
-        # )
-
-        with open(os.path.join(misc_dir, "agent_inst_new.txt"), "r", encoding="utf-8") as file:
-            agent_instruction = file.read().strip()  # reads entire file into a single string
-        agent = bedrock.Agent(
-            self,
-            "ChatAgent",
-            foundation_model=bedrock.BedrockFoundationModel.AMAZON_NOVA_PRO_V1,
-            instruction=agent_instruction,
-            user_input_enabled=True,
-            code_interpreter_enabled=False,
-            should_prepare_agent=True,
-        )
-        agent.add_knowledge_base(knowledge_base)
-        agent.add_action_group(structured_response_action)
         agent.add_action_group(get_dashboard_details_action)  # Add the new action group
+        # endregion action
 
         # Create agent alias
         agent_alias = bedrock.AgentAlias(
@@ -263,31 +250,6 @@ class BedrockAgentStack(Stack):
 
         self.agent_id = agent.agent_id
         self.agent_alias_id = agent_alias.alias_id
-
-        # # Outputs
-        # CfnOutput(
-        #     self,
-        #     "BedrockAgentId",
-        #     value=self.agent_id,
-        #     export_name="BedrockAgentId",
-        #     description="Bedrock Agent ID",
-        # )
-        #
-        # CfnOutput(
-        #     self,
-        #     "BedrockAgentAliasId",
-        #     value=self.agent_alias_id,
-        #     description="Bedrock Agent Alias ID",
-        #     export_name="BedrockAgentAliasId",
-        # )
-
-        # CfnOutput(
-        #     self,
-        #     "StructuredResponseFunctionArn",
-        #     value=structured_response_function_arn,
-        #     description="Structured Response Function Arn",
-        #     export_name="StructuredResponseFunctionArn",
-        # )
 
         CfnOutput(
             self,
